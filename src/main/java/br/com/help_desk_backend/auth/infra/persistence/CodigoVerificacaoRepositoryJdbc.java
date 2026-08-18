@@ -98,13 +98,13 @@ public class CodigoVerificacaoRepositoryJdbc extends JdbcOperationSql<GlobalDoma
     }
 
     @Override
-    public boolean validarEMarcarComoUtilizado(Long idUsuario, String codigoHash, String tipoCodigo) {
+    public boolean validarEMarcarComoUtilizado(Long idUsuario, String codigoHash, String nmTipoCodigo) {
         try {
             log.info("Validando e marcando código como utilizado");
             MapSqlParameterSource paramsValida = new MapSqlParameterSource();
             paramsValida.addValue("idUsuario", idUsuario);
-            paramsValida.addValue("codigoHash", codigoHash);
-            paramsValida.addValue("tipoCodigo", tipoCodigo);
+            paramsValida.addValue("cdVerificacao", codigoHash);
+            paramsValida.addValue("nmTipoCodigo", nmTipoCodigo);
 
             List<Long> idCodigoList = buscarLongs(queryVerificaCodigoValido, paramsValida);
 

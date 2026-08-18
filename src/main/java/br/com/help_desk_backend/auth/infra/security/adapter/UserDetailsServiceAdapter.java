@@ -19,8 +19,8 @@ public class UserDetailsServiceAdapter implements UserDetailsService {
     private final UserDetailsRepository userDetailsRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String nmEmail) throws UsernameNotFoundException {
-        UserAuthenticationDataDto usuario = userDetailsRepository.buscarPorEmail(nmEmail).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+    public UserDetails loadUserByUsername(String nmLogin) throws UsernameNotFoundException {
+        UserAuthenticationDataDto usuario = userDetailsRepository.buscarPorLogin(nmLogin).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
         SimpleGrantedAuthority autoridade = new SimpleGrantedAuthority("ROLE_" + usuario.getNmRole());
         return new User(usuario.getNmEmail(), usuario.getPsHash(), usuario.isInAtivo(), true, true, true,
                 Collections.singletonList(autoridade)

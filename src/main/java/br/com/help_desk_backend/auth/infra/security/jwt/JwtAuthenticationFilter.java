@@ -1,6 +1,7 @@
 package br.com.help_desk_backend.auth.infra.security.jwt;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -32,6 +34,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
             String token = extrairTokenDaRequisicao(request);
+//            if (Objects.isNull(token)) {
+//                throw ValidacaoExceptionFactory.unauthorized("teste", "TokenError");
+//            }
 
             if (StringUtils.hasText(token) && provedorTokenJwt.validarToken(token)) {
                 String nmEmail = provedorTokenJwt.obterEmailDoToken(token);
@@ -43,12 +48,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 autenticacao.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(autenticacao);
+                log.info("Usuário autenticado com sucesso");
             }
         } catch (Exception ex) {
             logger.error("Não foi possível autenticar o usuário no contexto de segurança", ex);
         }
-
         filterChain.doFilter(request, response);
+
     }
 
     private String extrairTokenDaRequisicao(HttpServletRequest request) {

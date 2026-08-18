@@ -5,5 +5,5 @@ import br.com.help_desk_backend.auth.infra.security.adapter.dto.UserAuthenticati
 import java.util.Optional;
 
 public interface UserDetailsRepository {
-    Optional<UserAuthenticationDataDto> buscarPorEmail(String email);
+    Optional<UserAuthenticationDataDto> buscarPorLogin(String nmLogin);
 }

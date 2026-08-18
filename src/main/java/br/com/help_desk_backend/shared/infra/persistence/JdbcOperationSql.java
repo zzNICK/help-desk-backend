@@ -1,7 +1,10 @@
 package br.com.help_desk_backend.shared.infra.persistence;
 
 import br.com.help_desk_backend.shared.domain.GlobalDomain;
+import br.com.help_desk_backend.shared.error.DatabaseException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -12,11 +15,25 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
 import java.util.List;
+import java.util.function.Supplier;
 
+@Slf4j
 public abstract class JdbcOperationSql<T extends GlobalDomain> {
 
     @Autowired
     protected NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+
+    protected <T> T executarTratamentoJdbc(String operacao, Supplier<T> operacaoJdbc) {
+        try {
+            return operacaoJdbc.get();
+        } catch (EmptyResultDataAccessException ex) {
+            log.debug("Nenhum registro encontrado na operação JDBC [{}]", operacao);
+            return null;
+        } catch (Exception ex) {
+            log.error("Erro na operação JDBC [{}]: {}", operacao, ex.getClass().getSimpleName(), ex);
+            throw new DatabaseException(operacao, ex);
+        }
+    }
 
     protected T salvar(String sql, T entity, String idColumnName) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -25,14 +42,12 @@ public abstract class JdbcOperationSql<T extends GlobalDomain> {
         entity.setId(keyHolder.getKey().longValue());
         return entity;
     }
-
     protected T alterar(String sql, T entity) {
         BeanPropertySqlParameterSource parameterSource = new BeanPropertySqlParameterSource(entity);
         this.namedParameterJdbcTemplate.update(sql, parameterSource);
         return entity;
     }
 
-    // REAPROVEITADO: Serve para QUALQUER comando de UPDATE ou DELETE
     protected Integer deletar(String sql, MapSqlParameterSource params) {
         return namedParameterJdbcTemplate.update(sql, params);
     }
@@ -41,13 +56,11 @@ public abstract class JdbcOperationSql<T extends GlobalDomain> {
         SqlParameterSource[] batch = SqlParameterSourceUtils.createBatch(ls.toArray());
         this.namedParameterJdbcTemplate.batchUpdate(query, batch);
     }
-
-    // AJUSTADO: Usa <E> em vez de <T> para permitir DTOs e tipos simples
     protected <E> List<E> buscarTodos(String sql, BeanPropertyRowMapper<E> mapper) {
         return namedParameterJdbcTemplate.query(sql, mapper);
     }
 
-    protected <E> E buscarPorId(String sql, MapSqlParameterSource params, BeanPropertyRowMapper<E> mapper) {
+    protected <E> E buscarPorParam(String sql, MapSqlParameterSource params, BeanPropertyRowMapper<E> mapper) {
         return namedParameterJdbcTemplate.queryForObject(sql, params, mapper);
     }
 
@@ -62,5 +75,10 @@ public abstract class JdbcOperationSql<T extends GlobalDomain> {
 
     protected List<Integer> buscarIntegers(String sql, MapSqlParameterSource params) {
         return namedParameterJdbcTemplate.query(sql, params, (rs, rowNum) -> rs.getInt(1));
+    }
+
+    protected Long buscarLong(String sql, MapSqlParameterSource params) {
+        return namedParameterJdbcTemplate.query(sql, params, (rs, rowNum) -> rs.getLong(1))
+                .stream().findFirst().orElse(null);
     }
 }

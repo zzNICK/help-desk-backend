@@ -57,6 +57,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 // Rotas de Autenticação e Recuperação Públicas
                 .antMatchers("/api/v1/help-desk/auth/**").permitAll()
 
+                // Controle do Módulo de Usuários
+                .antMatchers(HttpMethod.POST, "/api/v1/help-desk/users/**").permitAll()
+
                 // Controle do Módulo de Chamados
                 .antMatchers(HttpMethod.POST, "/api/v1/chamados/**").hasAnyRole("USER", "ADMIN")
                 .antMatchers(HttpMethod.GET, "/api/v1/chamados/**").hasAnyRole("USER", "ADMIN")

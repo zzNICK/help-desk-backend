@@ -1,5 +1,6 @@
 package br.com.help_desk_backend.auth.service;
 
+import br.com.help_desk_backend.auth.domain.TipoCodigoEnum;
 import br.com.help_desk_backend.auth.infra.security.SecurityUtils;
 import br.com.help_desk_backend.auth.controller.dto.AlterarEmailDTO;
 import br.com.help_desk_backend.auth.controller.dto.RedefinirSenhaDTO;
@@ -21,6 +22,7 @@ public class RecuperacaoAcessoService {
 
     private final PasswordEncoder passwordEncoder;
 
+    SecureRandom random = new SecureRandom();
 
     @Transactional
     public void solicitarCodigoRecuperacaoSenha(SolicitarCodigoDTO.SolicitarCodigoRequestDTO solicitarCodigoRequestDTO) {
@@ -28,8 +30,8 @@ public class RecuperacaoAcessoService {
             String cdAleatorio = gerarCodigoSeisDigitos();
             String cdVerificacao = passwordEncoder.encode(cdAleatorio);
 
-            codigoVerificacaoRepository.invalidarCodigosAnteriores(idUsuario, "RECUPERACAO_SENHA");
-            codigoVerificacaoRepository.salvarCodigo(idUsuario, cdVerificacao, "RECUPERACAO_SENHA", LocalDateTime.now().plusMinutes(15));
+            codigoVerificacaoRepository.invalidarCodigosAnteriores(idUsuario, TipoCodigoEnum.REC_SENHA.getNmTipoCodigo());
+            codigoVerificacaoRepository.salvarCodigo(idUsuario, cdVerificacao, TipoCodigoEnum.REC_SENHA.getNmTipoCodigo(), LocalDateTime.now().plusMinutes(15));
 
             // TODO: Enviar e-mail de fato via serviço de mensageria / JavaMailSender
             System.out.println("Código de recuperação gerado para " + solicitarCodigoRequestDTO.getNmEmail() + ": " + cdAleatorio);
@@ -41,7 +43,7 @@ public class RecuperacaoAcessoService {
         Long idUsuario = codigoVerificacaoRepository.buscarIdUsuarioPorEmail(redefinirSenhaDTO.getNmEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Dados de verificação inválidos ou expirados."));
 
-        boolean cdValido = codigoVerificacaoRepository.validarEMarcarComoUtilizado(idUsuario, passwordEncoder.encode(redefinirSenhaDTO.getCdVerificacao()), "RECUPERACAO_SENHA");
+        boolean cdValido = codigoVerificacaoRepository.validarEMarcarComoUtilizado(idUsuario, passwordEncoder.encode(redefinirSenhaDTO.getCdVerificacao()), TipoCodigoEnum.REC_SENHA.getNmTipoCodigo());
 
         if (!cdValido) {
             throw new IllegalArgumentException("Código de verificação inválido ou expirado.");
@@ -62,8 +64,8 @@ public class RecuperacaoAcessoService {
         String cdAleatorio = gerarCodigoSeisDigitos();
         String cdHash = passwordEncoder.encode(cdAleatorio);
 
-        codigoVerificacaoRepository.invalidarCodigosAnteriores(idUsuario, "ALTERACAO_EMAIL");
-        codigoVerificacaoRepository.salvarCodigo(idUsuario, cdHash, "ALTERACAO_EMAIL", LocalDateTime.now().plusMinutes(15));
+        codigoVerificacaoRepository.invalidarCodigosAnteriores(idUsuario, TipoCodigoEnum.ALT_EMAIL.getNmTipoCodigo());
+        codigoVerificacaoRepository.salvarCodigo(idUsuario, cdHash, TipoCodigoEnum.ALT_EMAIL.getNmTipoCodigo(), LocalDateTime.now().plusMinutes(15));
 
         // TODO: Enviar e-mail para o NOVO e-mail confirmando o código
         System.out.println("Código de confirmação de e-mail enviado para " + nmNovoEmail + ": " + cdAleatorio);
@@ -77,7 +79,7 @@ public class RecuperacaoAcessoService {
         Long idUsuario = codigoVerificacaoRepository.buscarIdUsuarioPorEmail(nmEmailUsuarioLogado)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
 
-        boolean codigoValido = codigoVerificacaoRepository.validarEMarcarComoUtilizado(idUsuario, passwordEncoder.encode(alterarEmailDTO.getCdVerificacao()), "ALTERACAO_EMAIL");
+        boolean codigoValido = codigoVerificacaoRepository.validarEMarcarComoUtilizado(idUsuario, passwordEncoder.encode(alterarEmailDTO.getCdVerificacao()), TipoCodigoEnum.ALT_EMAIL.getNmTipoCodigo());
 
         if (!codigoValido) {
             throw new IllegalArgumentException("Código de verificação inválido ou expirado.");
@@ -87,7 +89,6 @@ public class RecuperacaoAcessoService {
     }
 
     private String gerarCodigoSeisDigitos() {
-        SecureRandom random = new SecureRandom();
         int numero = 100_000 + random.nextInt(900_000);
         return String.valueOf(numero);
     }

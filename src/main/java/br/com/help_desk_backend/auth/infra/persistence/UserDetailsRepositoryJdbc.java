@@ -25,17 +25,17 @@ public class UserDetailsRepositoryJdbc extends JdbcOperationSql<GlobalDomain> im
 
     private static final String ERRO_GENERICO_BUSCAR_USUARIO = "Erro ao buscar usuário para autenticação";
 
-    @Value("${SPS.BUSCAR_USUARIO_POR_EMAIL}")
-    private String queryBuscarUsuarioPorEmail;
+    @Value("${SPS.BUSCAR_USUARIO_POR_LOGIN}")
+    private String queryBuscarUsuarioPorLogin;
 
     @Override
-    public Optional<UserAuthenticationDataDto> buscarPorEmail(String nmEmail) {
+    public Optional<UserAuthenticationDataDto> buscarPorLogin(String nmLogin) {
 
         try {
-            log.info("Buscando usuário para autenticação por e-mail");
+            log.info("Buscando usuário para autenticação por e-mail ou nome de usuário");
             MapSqlParameterSource params = new MapSqlParameterSource();
-            params.addValue("nmEmail", nmEmail);
-            List<UserAuthenticationDataDto> resultado = buscarTodosPorFiltro(queryBuscarUsuarioPorEmail, params, BeanPropertyRowMapper.newInstance(UserAuthenticationDataDto.class));
+            params.addValue("nmLogin", nmLogin);
+            List<UserAuthenticationDataDto> resultado = buscarTodosPorFiltro(queryBuscarUsuarioPorLogin, params, BeanPropertyRowMapper.newInstance(UserAuthenticationDataDto.class));
             return resultado.stream().findFirst();
         } catch (Exception ex) {
             log.error(ExceptionUtils.getMessage(ex), ex);

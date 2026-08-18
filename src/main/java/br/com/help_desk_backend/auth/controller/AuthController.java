@@ -32,11 +32,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDTO> autenticarUsuario(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
 
-        // 1. Cria o objeto de autenticação com o e-mail e senha fornecidos
-        UsernamePasswordAuthenticationToken dadosAutenticacao =
-                new UsernamePasswordAuthenticationToken(loginRequestDTO.getNmEmail(), loginRequestDTO.getNmSenha());
+        // 1. Cria o objeto de autenticação com o login (e-mail ou nome de usuário) e senha fornecidos
+        UsernamePasswordAuthenticationToken dadosAutenticacao = new UsernamePasswordAuthenticationToken(loginRequestDTO.getNmLogin(), loginRequestDTO.getNmSenha());
 
-        // 2. Valida o e-mail/senha via UserDetailsServiceImpl e Password
+        // 2. Valida o login/senha via UserDetailsServiceImpl e Password
         Authentication autenticacao = authenticationManager.authenticate(dadosAutenticacao);
 
         // 3. Define a autenticação no contexto do Spring Security

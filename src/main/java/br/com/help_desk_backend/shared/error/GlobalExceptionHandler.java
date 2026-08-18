@@ -2,6 +2,7 @@ package br.com.help_desk_backend.shared.error;
 
 import br.com.help_desk_backend.shared.domain.ApiResponseBody;
 import br.com.help_desk_backend.shared.domain.enums.HttpCustomEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -17,8 +19,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponseBody<String>> handleValidacaoException(
             ValidacaoException ex) {
 
-        HttpCustomEnum status = ex.getHttpEnum();
+        log.error(
+                "Erro de validação: status={}, codigo={}, mensagem={}",
+                ex.getHttpEnum().getStatus(),
+                ex.getException(),
+                ex.getMenssage()
+        );
 
+        HttpCustomEnum status = ex.getHttpEnum();
         return ResponseEntity
                 .status(status.getStatus())
                 .body(
@@ -67,6 +75,26 @@ public class GlobalExceptionHandler {
                                 causa.getMessage(),
                                 causa.getClass().getSimpleName()
                         )
+                );
+    }
+
+    @ExceptionHandler(DatabaseException.class)
+    public ResponseEntity<ApiResponseBody<String>> handleDatabaseException(
+            DatabaseException ex) {
+
+        log.error("Erro interno de persistência: operação={}, causa={}",
+                ex.getOperacao(),
+                ex.getCause() != null ? ex.getCause().getClass().getSimpleName() : "N/A",
+                ex
+        );
+
+        return ResponseEntity
+                .status(HttpCustomEnum.HTTP_500.getStatus())
+                .body(
+                        new ApiResponseBody<>(
+                                HttpCustomEnum.HTTP_500,
+                                "Erro interno ao processar a operação.",
+                                "DatabaseException")
                 );
     }
 }
