@@ -15,4 +15,8 @@ public final class ValidacaoExceptionFactory {
     public static ValidacaoException unauthorized(String mensagemKey, String ex) {
         return new ValidacaoException(HttpCustomEnum.HTTP_401, StringUtils.getMensagem(mensagemKey), ex);
     }
+
+    public static ValidacaoException notFound(String mensagemKey, String ex) {
+        return new ValidacaoException(HttpCustomEnum.HTTP_404, StringUtils.getMensagem(mensagemKey), ex);
+    }
 }
